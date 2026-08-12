@@ -199,13 +199,14 @@ function Get-TomlValue {
     return $l.Substring($eq + 1).Trim()
 }
 
-$TARGET_KEYS = @('model','model_provider','preferred_auth_method','forced_login_method',
-                 'model_reasoning_effort','model_catalog_json')
+$TARGET_KEYS = @('model','model_provider','model_reasoning_effort','model_catalog_json')
 
 $DEL_A = @{
     'profile'         = 'a profile masks model / model_provider / model_catalog_json, and this version rejects it'
     'oss_provider'    = 'alternate provider selector that would redirect requests elsewhere'
     'openai_base_url' = 'global base_url override that would hijack requests'
+    'preferred_auth_method' = 'forces API-only auth and breaks ChatGPT login'
+    'forced_login_method'   = 'forces API-only auth and breaks ChatGPT login'
 }
 
 $DEL_B = [ordered]@{
@@ -231,8 +232,6 @@ function Get-TargetValue {
     switch ($Key) {
         'model'                  { return "`"$($script:ModelSlug)`"" }
         'model_provider'         { return "`"$PROVIDER_ID`"" }
-        'preferred_auth_method'  { return '"apikey"' }
-        'forced_login_method'    { return '"api"' }
         'model_reasoning_effort' { return '"high"' }
         'model_catalog_json'     { return "`"$CatalogValue`"" }
     }
@@ -765,8 +764,6 @@ function Invoke-OpenCodeGoInstall {
     Write-Host @"
   model                  = "$($script:ModelSlug)"
   model_provider         = "$PROVIDER_ID"
-  preferred_auth_method  = "apikey"
-  forced_login_method    = "api"
   model_reasoning_effort = "high"
   model_catalog_json     = "$CatalogValue"
 
