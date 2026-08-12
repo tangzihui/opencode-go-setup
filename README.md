@@ -1,46 +1,52 @@
 # opencode-go-setup
 
-One-shot PowerShell config manager that points OpenCode at DeepSeek V4
-through the `opencode-go` provider.
+One-shot PowerShell config managers for connecting DeepSeek V4 models through
+the `opencode-go` provider.
 
-## What it does
+Two scripts are included:
 
-- Menu option `1`: switch OpenCode to `opencode-go/deepseek-v4-flash`
-- Menu option `2`: switch OpenCode to `opencode-go/deepseek-v4-pro`
+- `OpenCodeCLI-opencodego-setup.ps1` configures the **OpenCode CLI**
+- `Codex-opencodego-setup.ps1` configures the **Codex** `config.toml`
+
+## What they do
+
+- Menu option `1`: switch to DeepSeek V4 Flash
+- Menu option `2`: switch to DeepSeek V4 Pro
 - Menu option `3`: restore the config that existed before first install
 - Reads `OPENCODE_API_KEY` first, otherwise prompts for the API key
-- Backs up `opencode.json` and `auth.json` before first install
-- Rewrites only the `model` field on later runs
+- Backs up the target config before first install
+- Rewrites only the model setting on later runs
 
 ## Requirements
 
 - Windows PowerShell 5.1 or later
-- OpenCode installed and on `PATH`
-- A DeepSeek API key
+- A subscription/API key for OpenCode Go
+- For the OpenCode CLI script: OpenCode installed and on `PATH`
+- For the Codex script: Codex installed, with `%USERPROFILE%\.codex` created
 
-## Run from GitHub
+## Run the Codex script from GitHub
 
 ```powershell
-irm https://raw.githubusercontent.com/tangzihui/opencode-go-setup/main/opencode-go-setup.ps1 | iex
+irm https://raw.githubusercontent.com/tangzihui/opencode-go-setup/main/Codex-opencodego-setup.ps1 | iex
+```
+
+## Run the OpenCode CLI script from GitHub
+
+```powershell
+irm https://raw.githubusercontent.com/tangzihui/opencode-go-setup/main/OpenCodeCLI-opencodego-setup.ps1 | iex
 ```
 
 Or set the API key first so the script does not prompt:
 
 ```powershell
-$env:OPENCODE_API_KEY = 'sk-your-deepseek-api-key'
-irm https://raw.githubusercontent.com/tangzihui/opencode-go-setup/main/opencode-go-setup.ps1 | iex
-```
-
-## Run from a local file
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\opencode-go-setup.ps1
+$env:OPENCODE_API_KEY = 'sk-your-opencode-go-api-key'
+irm https://raw.githubusercontent.com/tangzihui/opencode-go-setup/main/Codex-opencodego-setup.ps1 | iex
 ```
 
 ## Notes
 
-- The script writes to `%APPDATA%\opencode\opencode.json` and
+- The Codex script edits `%USERPROFILE%\.codex\config.toml` and writes
+  `models.json` into the same directory.
+- The OpenCode CLI script edits `%APPDATA%\opencode\opencode.json` and
   `%LOCALAPPDATA%\opencode\auth.json` unless `OPENCODE_CONFIG_DIR` is set.
-- If `opencode.jsonc` already exists, it may override the model set here.
-- Config and auth files are backed up under a timestamped directory and can be
-  restored with menu option `3`.
+- Config files are backed up and can be restored with menu option `3`.
