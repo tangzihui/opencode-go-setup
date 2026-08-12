@@ -292,6 +292,15 @@ function Invoke-OpenCodeGoSwitchModel {
             $Out.Add($line); $i++; continue
         }
         $k = Get-TomlKey $line
+        if ($k -in @('preferred_auth_method','forced_login_method')) {
+            Update-ScanState $line
+            $i++
+            while (($script:MlState -or $script:Depth -ne 0) -and $i -lt $Lines.Count) {
+                Update-ScanState $Lines[$i]
+                $i++
+            }
+            continue
+        }
         if ($k -eq 'model') {
             # Swallow the complete assignment (could theoretically be a multi-line string)
             Update-ScanState $line
