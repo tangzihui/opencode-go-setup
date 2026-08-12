@@ -49,6 +49,7 @@ $ConfigPath   = Join-Path $CodexHomeDir 'config.toml'
 $ModelsPath   = Join-Path $CodexHomeDir 'models.json'
 $BackupDir    = Join-Path $CodexHomeDir $BACKUP_DIRNAME
 $BackupConfig = Join-Path $BackupDir 'config.toml'
+$BackupModels = Join-Path $BackupDir 'models.json'
 $Manifest     = Join-Path $BackupDir 'manifest.txt'
 
 # On Windows we cannot confirm Codex expands ~, and when it doesn't the failure is
@@ -73,6 +74,12 @@ function Invoke-OpenCodeGoRestore {
             $hadConfig = $false
         }
     }
+    $hadModels = $false
+    if (Test-Path -LiteralPath $Manifest) {
+        if ((Get-Content -LiteralPath $Manifest -Raw) -match 'original_models_existed=1') {
+            $hadModels = $true
+        }
+    }
 
     $n = 1
     Write-Host ''
@@ -88,7 +95,16 @@ function Invoke-OpenCodeGoRestore {
         Write-Host "  $n. Delete $ConfigPath"; $n++
         Write-Dim  '     (this file did not exist before installation)'
     }
-    Write-Host "  $n. Delete $ModelsPath"; $n++
+    if ($hadModels) {
+        if (-not (Test-Path -LiteralPath $BackupModels)) {
+            Die "Backup is corrupted: missing $BackupModels"
+        }
+        Write-Host "  $n. Delete the current $ModelsPath"; $n++
+        Write-Host "  $n. Restore models.json from the backup"; $n++
+    } else {
+        Write-Host "  $n. Delete $ModelsPath"; $n++
+        Write-Dim  '     (this file did not exist before installation)'
+    }
     Write-Host "  $n. Delete the backup directory $BackupDir"
     Write-Host ''
 
@@ -98,8 +114,6 @@ function Invoke-OpenCodeGoRestore {
         return
     }
 
-    if (Test-Path -LiteralPath $ModelsPath) { Remove-Item -LiteralPath $ModelsPath -Force }
-
     if ($hadConfig) {
         Copy-Item -LiteralPath $BackupConfig -Destination $ConfigPath -Force
         Write-Ok 'config.toml restored'
@@ -107,7 +121,13 @@ function Invoke-OpenCodeGoRestore {
         if (Test-Path -LiteralPath $ConfigPath) { Remove-Item -LiteralPath $ConfigPath -Force }
         Write-Ok 'config.toml deleted (it did not exist before installation)'
     }
-    Write-Ok 'models.json deleted'
+    if (Test-Path -LiteralPath $ModelsPath) { Remove-Item -LiteralPath $ModelsPath -Force }
+    if ($hadModels) {
+        Copy-Item -LiteralPath $BackupModels -Destination $ModelsPath -Force
+        Write-Ok 'models.json restored'
+    } else {
+        Write-Ok 'models.json deleted (it did not exist before installation)'
+    }
 
     Remove-Item -LiteralPath $BackupDir -Recurse -Force
     Write-Ok 'Backup directory cleaned up'
@@ -363,6 +383,15 @@ function Invoke-OpenCodeGoInstall {
         Write-Ok "Backed up config.toml -> $BackupConfig"
     } else {
         Write-Warn2 'config.toml not found; a new file will be created'
+    }
+
+    $OrigModelsExisted = Test-Path -LiteralPath $ModelsPath
+    if ($OrigModelsExisted) {
+        Copy-Item -LiteralPath $ModelsPath -Destination $BackupModels -Force
+        Write-Ok "Backed up models.json -> $BackupModels"
+        Write-Dim 'The existing models.json already contains the DeepSeek V4 models; it will be replaced after the backup.'
+    } else {
+        Write-Warn2 'models.json not found; a new file will be created'
     }
 
     # ---- processing
@@ -713,6 +742,7 @@ function Invoke-OpenCodeGoInstall {
         "script_version=$SCRIPT_VERSION"
         "installed_at=$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
         "original_config_existed=$(if ($OrigExisted) { 1 } else { 0 })"
+        "original_models_existed=$(if ($OrigModelsExisted) { 1 } else { 0 })"
         "model_slug=$($script:ModelSlug)"
         "base_url=$BaseUrl"
         "catalog_value=$CatalogValue"
@@ -869,17 +899,24 @@ Suggested fixes (pick one):
     }
 
     if (Test-Path -LiteralPath $ModelsPath) {
-        Die @"
+        $modelsRaw = Get-Content -LiteralPath $ModelsPath -Raw -Encoding UTF8
+        $hasFlash = $modelsRaw -match [regex]::Escape("`"$FLASH_SLUG`"")
+        $hasPro   = $modelsRaw -match [regex]::Escape("`"$PRO_SLUG`"")
+        if (-not ($hasFlash -and $hasPro)) {
+            Die @"
 An existing file was detected:
   $ModelsPath
 
-This file was not written by this script (this script's backup directory
-$BackupDir was not found).
-This script needs to create that file. Please delete (or move) it first,
-then run again:
-  Remove-Item '$ModelsPath'
+It does not contain the DeepSeek V4 model entries that this script needs
+($FLASH_SLUG / $PRO_SLUG), and this script's backup directory
+$BackupDir was not found.
+To avoid damaging that file, this run has been aborted and no files were
+modified. Move it aside or remove it, then run again:
+  Move-Item '$ModelsPath' '$ModelsPath.old'
   $INSTALL_CMD
 "@
+        }
+        Write-Warn2 'models.json already exists and contains the DeepSeek V4 models; it will be backed up and reused as the starting point.'
     }
 
     Invoke-OpenCodeGoInstall
