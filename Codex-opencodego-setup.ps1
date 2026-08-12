@@ -1,7 +1,7 @@
 <#
 Codex OpenCode Go Setup -- configuration manager (Windows)
 
-Run:  irm https://raw.githubusercontent.com/tangzihui/opencode-go-setup/main/Codex-opencodego-setup.ps1 | iex
+Run:  irm https://github.com/tangzihui/opencode-go-setup/raw/main/Codex-opencodego-setup.ps1 | iex
 
 After launch, pick a menu item:
   1 = use deepseek-v4-flash    2 = use deepseek-v4-pro    3 = restore default config
@@ -22,7 +22,7 @@ $PROVIDER_ID      = 'opencode-go'
 $DEFAULT_BASE_URL = 'https://opencode.ai/zen/go/v1'
 $BACKUP_DIRNAME   = 'backup-opencode-go'
 
-$SCRIPT_URL  = 'https://raw.githubusercontent.com/tangzihui/opencode-go-setup/main/Codex-opencodego-setup.ps1'
+$SCRIPT_URL  = 'https://github.com/tangzihui/opencode-go-setup/raw/main/Codex-opencodego-setup.ps1'
 $INSTALL_CMD = "irm $SCRIPT_URL | iex"
 
 $ABORT_SENTINEL = '__OPENCODE_GO_CODEX_SETUP_ABORT__'

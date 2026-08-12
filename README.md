@@ -27,20 +27,20 @@ Two scripts are included:
 ## Run the Codex script from GitHub
 
 ```powershell
-irm https://raw.githubusercontent.com/tangzihui/opencode-go-setup/main/Codex-opencodego-setup.ps1 | iex
+irm https://github.com/tangzihui/opencode-go-setup/raw/main/Codex-opencodego-setup.ps1 | iex
 ```
 
 ## Run the OpenCode CLI script from GitHub
 
 ```powershell
-irm https://raw.githubusercontent.com/tangzihui/opencode-go-setup/main/OpenCodeCLI-opencodego-setup.ps1 | iex
+irm https://github.com/tangzihui/opencode-go-setup/raw/main/OpenCodeCLI-opencodego-setup.ps1 | iex
 ```
 
 Or set the API key first so the script does not prompt:
 
 ```powershell
 $env:OPENCODE_API_KEY = 'sk-your-opencode-go-api-key'
-irm https://raw.githubusercontent.com/tangzihui/opencode-go-setup/main/Codex-opencodego-setup.ps1 | iex
+irm https://github.com/tangzihui/opencode-go-setup/raw/main/Codex-opencodego-setup.ps1 | iex
 ```
 
 ## Notes
